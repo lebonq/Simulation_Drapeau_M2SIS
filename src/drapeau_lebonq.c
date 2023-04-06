@@ -100,7 +100,7 @@ void init(void) {
     exit(1);
 
   m = 10;
-  r = 10 * (wxmax - wxmin) / (nbm - 1);
+  r = 0.2;// * (wxmax - wxmin) / (nbm - 1);
 
   // def des masses les w premieres sont fixes et les idx%w==0 aussi
   for (int i = 0; i < width * height; i++) {
@@ -223,6 +223,7 @@ void init(void) {
     Connect(M, L, NULL);
     L++;
   }
+
 
   //Put to false random link in 3 tabs
   weakness_number = 0;
@@ -402,7 +403,7 @@ int main(int argc, char *argv[]) {
 
   gettimeofday(&tv, NULL);
 
-  g3x_SetCameraSpheric(1.1,0.315,22.270);
+  g3x_SetCameraCartesian((G3Xpoint){39.192,30.491,6.587},(G3Xpoint){0.0,0.0,2.5});
   g3x_SetInitFunction(init);
   g3x_SetCtrlFunction(ctrl);
   g3x_SetDrawFunction(draw);
