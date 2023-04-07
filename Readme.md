@@ -65,13 +65,22 @@ La réaction des collisions est geré par liaison conditionnelle. Lorsque le mai
 
 ## Point d'amélioration 
 
+### Auto-collision (fonctionne mal)
+
+L'auto-collision est géré via un maillage de collision qui est beaucoup trop grand. Il faudrait trouver un moyen de le réduire pour gagner en performance.
+
+De plus la réaction de collision est très simple, et le rendu n'est pas satisfaisant. Nous pourrions utiliser la dynamique inverse pour des résultats plus réaliste.
+
+### GPU
+
+Passer tout les calculs sur GPU nous permettrait de gagner en performance. Nous pourrions utiliser CUDA pour cela. Cela nous permettrai d'augenter le nombre de masse dans le drapeau pour un meilleur rendu.
 
 
 ## Vidéo
 
 https://youtu.be/8T_YyeyOHtE
 
-Lien vers la vidéo sur Youtube, cette video a ete prise abvant la mise en place de l'auto-collision et reflete mieux la qualite de la simulation.
+Lien vers la vidéo sur Youtube, cette video a ete prise avant la mise en place de l'auto-collision. Je ne peux malheuresment pas enregistrer une nouvelle video car ma configuration ne me le permet pas.
 
 
 ### Images
