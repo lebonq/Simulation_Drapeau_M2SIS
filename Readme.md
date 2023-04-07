@@ -37,7 +37,7 @@ Seuil : le seuil de force auquel les liaisons sont rompues.
 
 ### Taille du drapeau et du maillage de collision
 
-
+La drapeau contient 50*40 particules. Le maillage lui contient 8 000 000 de cellules.
 
 ## Elements implementes
 
@@ -56,7 +56,12 @@ A l'instar de la gravité le vent est aussi un ensemble de lien constant. Le vec
 
 ### Déchirure
 
+Pour implémenter la déchirure nous avons utilisé un seuil de force. Si la force appliqué sur une liaison est supérieur au seuil alors la liaison est rompue. Elle n'est plus affiché et n'est plus prise en compte dans les calculs.
+
 ### Auto-collision
+
+L'auto-collision est géré via un maillage de collision.
+La réaction des collisions est geré par liaison conditionnelle. Lorsque le mailliage detecte 2 particules dans une cellule il declenche de calcul de la réaction de la collision, cela permet d'éviter de calculer en permanence les collisions entre toutes les particules.
 
 ## Point d'amélioration 
 

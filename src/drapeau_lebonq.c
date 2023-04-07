@@ -420,8 +420,11 @@ void anim(void) {
   for (M = Mtab; M < Mtab + nbm; M++) {
     pos_mesh = M->pos_mesh;
     M->setup(M);
-    if(pos_mesh != M->pos_mesh) { // Si le position de la masse a change dans le mesh alors on update la list du mesh
+    if(pos_mesh != M->pos_mesh && pos_mesh != -1) { // Si le position de la masse a change dans le mesh alors on update la list du mesh
       removeNode(&mesh,pos_mesh, M->id_part); // On supprime l'ancienne position
+      if(M->pos_mesh != -1)addNode(&mesh,M->pos_mesh, M->id_part); // On ajoute la nouvelle position
+    }
+    else if(pos_mesh == -1 && M->pos_mesh != -1) { // Si la masse n'etait pas dans le mesh et qu'elle y est maintenant
       addNode(&mesh,M->pos_mesh, M->id_part); // On ajoute la nouvelle position
     }
   }
