@@ -7,7 +7,6 @@
 
 #include <Link.h>
 #include <PMat.h>
-#include <Mesh.h>
 
 static double wxmin = -10., wymin = -10., wxmax = +10., wymax = +10.;
 
@@ -82,7 +81,7 @@ void reset() {
 void init(void) {
   nbm = width * height;
   nblgeo = nbm * 2 - width - height;
-  nbltor = nbm * 2 - width*2 - height*2 +2;
+  nbltor = nbm * 2 - width*2 - height*2;
   nblcourb = nbm *2 - width*2 - height*2 - 4;
   nblgrav = nbm;
   nblwind = nbm;
@@ -101,14 +100,7 @@ void init(void) {
     exit(1);
 
   m = 10;
-  r = 0.25;// * (wxmax - wxmin) / (nbm - 1);
-
-  Mesh *mesh;
-  initMesh(mesh,0.15,-15.0,15.0);
-
-  printf("Size mesh x = %d, y = %d, z = %d\n", mesh->nx, mesh->ny, mesh->nz);
-
-  printf("coord 1d = %d\n", convert_to_1d(15.0f,15.0f,15.0f));
+  r = 10 * (wxmax - wxmin) / (nbm - 1);
 
   // def des masses les w premieres sont fixes et les idx%w==0 aussi
   for (int i = 0; i < width * height; i++) {
@@ -232,6 +224,7 @@ void init(void) {
     L++;
   }
 
+  
 
   //Put to false random link in 3 tabs
   weakness_number = 0;
@@ -371,9 +364,6 @@ void anim(void) {
   for (M = Mtab; M < Mtab + nbm; M++) {
     M->setup(M);
   }
-  M = Mtab;
-  M += 41;
-  printf("coord 1d = %d\n", convert_to_1d(M->pos.x,M->pos.y,M->pos.z));
 
   struct timeval cr_tv;
   gettimeofday(&cr_tv, NULL);
@@ -414,7 +404,7 @@ int main(int argc, char *argv[]) {
 
   gettimeofday(&tv, NULL);
 
-  g3x_SetCameraCartesian((G3Xpoint){38.710,46.752,13.405},(G3Xpoint){0.0,0.0,2.5});
+  g3x_SetCameraSpheric(1.1,0.315,22.270);
   g3x_SetInitFunction(init);
   g3x_SetCtrlFunction(ctrl);
   g3x_SetDrawFunction(draw);
