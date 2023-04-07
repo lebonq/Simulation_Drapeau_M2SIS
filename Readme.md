@@ -35,9 +35,20 @@ Slider sans nom est le nombre de liaison rompu lors de l'initialisation. (cela p
 
 Seuil : le seuil de force auquel les liaisons sont rompues.
 
+### Taille du drapeau et du maillage de collision
+
+
+
 ## Elements implementes
 
 ### Maillages
+
+Les trois types de maillages ont ete implémenté. Le maillage géométrique, de courbure et de torsion.
+Chacun est stocker dans son propre tableau pour une gestion plus simple des liens.
+
+### Gravité 
+
+La gravité est un ensemble de lien qui est applique sur chaque
 
 ### Vent
 
