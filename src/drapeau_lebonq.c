@@ -28,6 +28,7 @@ static Link *LTorssionLink = NULL;
 static Link *LCourbureLink = NULL;
 static Link *LGravitytab = NULL;
 static Link *LWindtab = NULL;
+static Mesh mesh;
 double h;
 
 double wind_factor = 3;
@@ -103,12 +104,9 @@ void init(void) {
   m = 10;
   r = 0.25;// * (wxmax - wxmin) / (nbm - 1);
 
-  Mesh *mesh;
-  initMesh(mesh,0.15,-15.0,15.0);
+  initMesh(&mesh,0.15,-15.0,15.0);
 
-  printf("Size mesh x = %d, y = %d, z = %d\n", mesh->nx, mesh->ny, mesh->nz);
-
-  printf("coord 1d = %d\n", convert_to_1d(15.0f,15.0f,15.0f));
+  printf("Size mesh x = %d, y = %d, z = %d\n", mesh.nx, mesh.ny, mesh.nz);
 
   // def des masses les w premieres sont fixes et les idx%w==0 aussi
   for (int i = 0; i < width * height; i++) {
@@ -130,13 +128,16 @@ void init(void) {
       m = 2.5;
     }
 
+    int pos_mesh = convert_to_1d(p.x,p.y,p.z);
 
     if (i % width == 0){
-      Fixe(Mtab + i, p);}
+      Fixe(Mtab + i, p,pos_mesh,i);}
     else{
-      Masse(Mtab + i, p,m);//x*((1.0-6.0)/(width-1))+6.0);
+      Masse(Mtab + i, p,m,pos_mesh,i);//x*((1.0-6.0)/(width-1))+6.0);
       //printf("x = %d , m = %f\n",x,  x*((1.0-6.0)/(width-1))+6.0);
-      }
+    }
+
+    addNode(&mesh,pos_mesh,i);
 
   }
 
@@ -348,6 +349,7 @@ void draw(void) {
 }
 
 void anim(void) {
+
   Link *L;
   for (L = LGeometrieLink; L < LGeometrieLink + nblgeo; L++) {
     if(L->on_off == false) continue;
@@ -367,13 +369,33 @@ void anim(void) {
   for (L = LWindtab; L < LWindtab + nblwind; L++) {
     L->setup(L);
   }
+
   PMat *M;
+  PMat *M1;
+  PMat *M2;
+  int pos_mesh;
   for (M = Mtab; M < Mtab + nbm; M++) {
+    pos_mesh = M->pos_mesh;
     M->setup(M);
+    if(pos_mesh != M->pos_mesh) { // Si le position de la masse a change dans le mesh alors on update la list du mesh
+      removeNode(&mesh,pos_mesh, M->id_part); // On supprime l'ancienne position
+      addNode(&mesh,M->pos_mesh, M->id_part); // On ajoute la nouvelle position
+    }
   }
-  M = Mtab;
-  M += 41;
-  printf("coord 1d = %d\n", convert_to_1d(M->pos.x,M->pos.y,M->pos.z));
+
+  //for in particles of mesh
+  for(int i = 0; i < mesh.nx * mesh.ny * mesh.nz; i++) {
+    if(mesh.nb_particules[i] >= 2){
+      printf("mesh[%d] = %d\n", i, mesh.nb_particules[i]);
+      printList(mesh.particles[i]); 
+      //Compute collision between 2 masses
+      M1 = Mtab + mesh.particles[i]->data;
+      M2 = Mtab + mesh.particles[i]->next->data;
+
+      printf("M1 = %d, M2 = %d \n", M1->id_part, M2->id_part);
+      //collide(M1, M2);
+    }
+  }
 
   struct timeval cr_tv;
   gettimeofday(&cr_tv, NULL);
@@ -392,7 +414,7 @@ void anim(void) {
     for (L = LWindtab; L < LWindtab + nblwind; L++) {
       L->frc = wind;
     }
-    printf("Wind : x => %f, y => %f, Z => %f\n", wind.x/Fe, wind.y/Fe, wind.z/Fe);
+    printf("Wind : x => %f, y => %f, Z => %f\n", wind.x/Fe, wind.y/Fe, wind.z/Fe);    
   }
 }
 

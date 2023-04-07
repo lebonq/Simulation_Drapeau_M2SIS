@@ -20,6 +20,8 @@
 #ifndef  _PMAT_
   #define _PMAT_
 
+  #include <Mesh.h>
+
   /* identificateur de types                                                              */
   /* Masses Libres : distinguer les masses de surface des masses internes                 */
   #define _MASS  0
@@ -45,6 +47,8 @@
     int    type;       /* type pour usages divers             */
    /*---------------------------------------------------------*/
     double m;          /* paramètre de masse ET rayon dans certains cas */
+    int pos_mesh;
+    int id_part;       /* identifiant de la particule         */
     Point  pos;        /* position courante                   */
     Vector vit;        /* vitesse  courante                   */
     Vector frc;        /* buffer de force                     */
@@ -73,6 +77,7 @@ static void LeapFrog(PMat* M)
   M->pos.z += h*M->vit.z;
   /* après la mise à jour de l'état, on vide le buffer de force     */
   M->frc = Vzero;
+  M->pos_mesh = convert_to_1d(M->pos.x,M->pos.y,M->pos.z); // Update pos in mesh
 }
 
 /*! Algorithme du point fixe (position constante) !*/
@@ -82,12 +87,38 @@ static void AlgoFixe(PMat* M)
   M->frc = Vzero;
 }
 
+static void collide(PMat* m1, PMat* m2)
+{
+  printf("Compute Distance\n");
+  double dist = sqrt(pow(m2->pos.x - m1->pos.x, 2) + pow(m2->pos.y - m1->pos.y, 2) + pow(m2->pos.z - m1->pos.z, 2));
+  printf("Compute Touch\n");
+  double touch = 0.05*2.0 - dist; //0.05 is the radius of the sphere
+  if (touch > 0) {
+    // Calculate the normal vector of the collision
+    printf("Collision !\n");
+    Vector normal = { (m2->pos.x - m1->pos.x) / dist, (m2->pos.y - m1->pos.y) / dist, (m2->pos.z - m1->pos.z) / dist };
+    // Calculate the impulse
+    printf("Compute impulse\n");
+    Vector impulse = { touch * normal.x, touch * normal.y, touch * normal.z };
+    // Apply the impulse to both masses
+    printf("Apply impulse\n");
+    m1->vit.x += impulse.x / m1->m;
+    m1->vit.y += impulse.y / m1->m;
+    m1->vit.z += impulse.z / m1->m;
+    m2->vit.x -= impulse.x / m2->m;
+    m2->vit.y -= impulse.y / m2->m;
+    m2->vit.z -= impulse.z / m2->m;
+    printf("Collision Computed\n");
+  }
+   printf("End collide\n");
+}
+
 /*!---------------------------------------------------------------------------------------------!*/
 /*!                                        CONSTRUCTEURS                                        !*/
 /*!---------------------------------------------------------------------------------------------!*/
 
 /*! Création d'une masse libre !*/
-extern void Masse(PMat* M, Point P0, double m)
+extern void Masse(PMat* M, Point P0, double m, int pos_mesh, int id_part)
 {
   M->type = _MASS;
   M->setup= &LeapFrog;
@@ -95,10 +126,12 @@ extern void Masse(PMat* M, Point P0, double m)
   M->vit  = Vzero;
   M->frc  = Vzero;
   M->m    = m;
+  M->pos_mesh = pos_mesh;
+  M->id_part = id_part;
 }
 
 /*! Création d'une masse fixe !*/
-extern void Fixe(PMat *M, Point P0)
+extern void Fixe(PMat *M, Point P0, int pos_mesh, int id_part)
 {
   M->type = _FIXE;
   M->setup= &AlgoFixe;
@@ -106,6 +139,8 @@ extern void Fixe(PMat *M, Point P0)
   M->vit  = Vzero;
   M->frc  = Vzero;
   M->m    = 0.;
+  M->pos_mesh = pos_mesh;
+  M->id_part = id_part;
 }
 
 
