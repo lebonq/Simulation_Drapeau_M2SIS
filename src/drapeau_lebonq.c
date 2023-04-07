@@ -20,7 +20,7 @@ static double m, r, s;
 static double alpha,beta; //factor for torssion and courbure
 static int weakness_number;
 
-static int nbm = 0, nblgeo = 0, nblgrav = 0, nbltor = 0, nblcourb = 0, nblwind = 0, width = 50, height = 40;
+static int nbm = 0, nblgeo = 0, nblgrav = 0, nbltor = 0, nblcourb = 0, nblwind = 0, nblauto = 0, width = 50, height = 40;
 int w_x, h_z;
 static PMat *Mtab = NULL;
 static Link *LGeometrieLink = NULL;
@@ -28,12 +28,14 @@ static Link *LTorssionLink = NULL;
 static Link *LCourbureLink = NULL;
 static Link *LGravitytab = NULL;
 static Link *LWindtab = NULL;
+static Link *LAutoCollide = NULL;
 static Mesh mesh;
 double h;
 
 double wind_factor = 3;
 Vector wind = {10., 3., 1.};
 struct timeval tv;
+bool autocolision = false;
 
 void reset() {
 
@@ -80,6 +82,10 @@ void reset() {
   } 
 }
 
+void auto_col(){
+  autocolision = !autocolision;
+}
+
 void init(void) {
   nbm = width * height;
   nblgeo = nbm * 2 - width - height;
@@ -87,6 +93,7 @@ void init(void) {
   nblcourb = nbm *2 - width*2 - height*2 - 4;
   nblgrav = nbm;
   nblwind = nbm;
+  nblauto = nbm*(nbm-1)/2;
 
   if (!(Mtab = (PMat *)calloc(nbm, sizeof(PMat))))
     exit(1);
@@ -99,6 +106,8 @@ void init(void) {
   if (!(LGravitytab = (Link *)calloc(nblgrav, sizeof(Link))))
     exit(1);
   if (!(LWindtab = (Link *)calloc(nblwind, sizeof(Link))))
+    exit(1);
+  if (!(LAutoCollide = (Link *)calloc(nblauto, sizeof(Link))))
     exit(1);
 
   m = 10;
@@ -233,6 +242,21 @@ void init(void) {
     L++;
   }
 
+  L = LAutoCollide;
+  M = Mtab;
+  int linkIndex = 0;
+  for (int i = 0; i < nbm; i++) {
+    for (int j = i + 1; j < nbm; j++) {
+      RessortFreinSeuil(L,0.5,0.12,s);
+      Connect(M+i, L, M + j);
+      //printf("Link %d created between particles %d and %d\n", linkIndex, i, j);
+      L++;
+      linkIndex++;
+    }
+
+  }
+
+
 
   //Put to false random link in 3 tabs
   weakness_number = 0;
@@ -264,6 +288,7 @@ void ctrl(void) {
   g3x_CreateScrollh_d("alpha ", &alpha, 0.25, 1., 1, "alpha  : facteur pour le calcul de la force de courbure ");
   g3x_CreateScrollh_d("beta ", &beta, 0.50, 1., 1, "beta  : facteur pour le calcul de la force de torsion ");
   g3x_CreatePopUp("reset", reset, "reset des positions");
+  g3x_CreatePopUp("Auto-Colli", auto_col, "Activation de l'autocollision");
 }
 
 void draw(void) {
@@ -370,33 +395,6 @@ void anim(void) {
     L->setup(L);
   }
 
-  PMat *M;
-  PMat *M1;
-  PMat *M2;
-  int pos_mesh;
-  for (M = Mtab; M < Mtab + nbm; M++) {
-    pos_mesh = M->pos_mesh;
-    M->setup(M);
-    if(pos_mesh != M->pos_mesh) { // Si le position de la masse a change dans le mesh alors on update la list du mesh
-      removeNode(&mesh,pos_mesh, M->id_part); // On supprime l'ancienne position
-      addNode(&mesh,M->pos_mesh, M->id_part); // On ajoute la nouvelle position
-    }
-  }
-
-  //for in particles of mesh
-  for(int i = 0; i < mesh.nx * mesh.ny * mesh.nz; i++) {
-    if(mesh.nb_particules[i] >= 2){
-      printf("mesh[%d] = %d\n", i, mesh.nb_particules[i]);
-      printList(mesh.particles[i]); 
-      //Compute collision between 2 masses
-      M1 = Mtab + mesh.particles[i]->data;
-      M2 = Mtab + mesh.particles[i]->next->data;
-
-      printf("M1 = %d, M2 = %d \n", M1->id_part, M2->id_part);
-      //collide(M1, M2);
-    }
-  }
-
   struct timeval cr_tv;
   gettimeofday(&cr_tv, NULL);
   //print both time and difference
@@ -416,6 +414,40 @@ void anim(void) {
     }
     printf("Wind : x => %f, y => %f, Z => %f\n", wind.x/Fe, wind.y/Fe, wind.z/Fe);    
   }
+
+  PMat *M;
+  int pos_mesh;
+  for (M = Mtab; M < Mtab + nbm; M++) {
+    pos_mesh = M->pos_mesh;
+    M->setup(M);
+    if(pos_mesh != M->pos_mesh) { // Si le position de la masse a change dans le mesh alors on update la list du mesh
+      removeNode(&mesh,pos_mesh, M->id_part); // On supprime l'ancienne position
+      addNode(&mesh,M->pos_mesh, M->id_part); // On ajoute la nouvelle position
+    }
+  }
+
+  if(autocolision == true) {
+
+  //for in particles of mesh
+  for(int i = 0; i < mesh.nx * mesh.ny * mesh.nz; i++) {
+    if(mesh.nb_particules[i] >= 2){
+      //printf("mesh[%d] = %d\n", i, mesh.nb_particules[i]);
+      //printList(mesh.particles[i]); 
+
+      int m1 = mesh.particles[i]->data;
+      int m2 = mesh.particles[i]->next->data;
+      int offset = 0;
+
+    if (m1 < m2) {
+        offset = (m1*nbm) - ((m1*(m1+1))/2) + (m2-m1-1);
+    } else {
+        offset = (m2*nbm) - ((m2*(m2+1))/2) + (m1-m2-1);
+    }
+      L = LAutoCollide + offset;
+      L->setup(L);
+    }
+  }}
+
 }
 
 void quit(void) {

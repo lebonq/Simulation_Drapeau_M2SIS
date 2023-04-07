@@ -27,6 +27,7 @@
   #define _MASS  0
   /* on distingue les points fixes classiques (simple masse infinie, pontuelles)...       */
   #define _FIXE  1
+  #define _COEFF_RESTITUTION 0.4
 
   #ifndef _BOOL_
     #define _BOOL_
@@ -89,29 +90,34 @@ static void AlgoFixe(PMat* M)
 
 static void collide(PMat* m1, PMat* m2)
 {
-  printf("Compute Distance\n");
+  if(m1->type == _FIXE || m2->type == _FIXE) return; // Si l'un des deux est fixe, on ne fait rien
   double dist = sqrt(pow(m2->pos.x - m1->pos.x, 2) + pow(m2->pos.y - m1->pos.y, 2) + pow(m2->pos.z - m1->pos.z, 2));
-  printf("Compute Touch\n");
-  double touch = 0.05*2.0 - dist; //0.05 is the radius of the sphere
-  if (touch > 0) {
+  double touch = 0.05 - dist; //0.25 is the radius of the sphere
+  printf("Touch : %f\n", touch);
+  if (touch > -0.05) {
     // Calculate the normal vector of the collision
-    printf("Collision !\n");
     Vector normal = { (m2->pos.x - m1->pos.x) / dist, (m2->pos.y - m1->pos.y) / dist, (m2->pos.z - m1->pos.z) / dist };
     // Calculate the impulse
-    printf("Compute impulse\n");
     Vector impulse = { touch * normal.x, touch * normal.y, touch * normal.z };
     // Apply the impulse to both masses
-    printf("Apply impulse\n");
-    m1->vit.x += impulse.x / m1->m;
-    m1->vit.y += impulse.y / m1->m;
-    m1->vit.z += impulse.z / m1->m;
-    m2->vit.x -= impulse.x / m2->m;
-    m2->vit.y -= impulse.y / m2->m;
-    m2->vit.z -= impulse.z / m2->m;
-    printf("Collision Computed\n");
+    m1->vit.x -= impulse.x / m1->m;
+    m1->vit.y -= impulse.y / m1->m;
+    m1->vit.z -= impulse.z / m1->m;
+    m2->vit.x += impulse.x / m2->m;
+    m2->vit.y += impulse.y / m2->m;
+    m2->vit.z += impulse.z / m2->m;
+
+    /*m1->vit.x += impulse.x*2000;
+    m1->vit.y += impulse.y*2000;
+    m1->vit.z += impulse.z*2000;
+    m2->vit.x -= impulse.x*2000;
+    m2->vit.y -= impulse.y*2000;
+    m2->vit.z -= impulse.z*2000;*/
+
+
   }
-   printf("End collide\n");
 }
+
 
 /*!---------------------------------------------------------------------------------------------!*/
 /*!                                        CONSTRUCTEURS                                        !*/
