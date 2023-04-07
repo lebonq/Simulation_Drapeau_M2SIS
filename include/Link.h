@@ -133,10 +133,10 @@ extern void Connect(PMat *M1, Link *L, PMat *M2)
     L->M2=M2;
     return;
   }
-  if(L->type==F_RESS_FREIN)
-    L->l = dist(M1->pos,M2->pos);
-  if(L->type==F_RESS_FREIN_SEUIL)
-    L->l = 0.20;
+  if(L->type==F_RESS_FREIN){
+    L->l = dist(M1->pos,M2->pos);}
+  if(L->type==F_RESS_FREIN_SEUIL){
+    L->l = 0.20;}
   L->M1=M1;
   L->M2=M2;
 }
