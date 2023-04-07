@@ -52,9 +52,9 @@ La gravité est un ensemble de lien qui est applique sur chaque masse. ce lien e
 
 ### Vent
 
-A l'instar de la gravité le vent est aussi un ensemble de lien constant. Le vecteur de la force est modulé aléatoirement (voir ligne xx) pour donner du mouvement au drapeau.
+A l'instar de la gravité le vent est aussi un ensemble de lien constant. Le vecteur de la force est modulé aléatoirement (voir ligne 401) pour donner du mouvement au drapeau.
 
-### Dechirure
+### Déchirure
 
 ### Auto-collision
 
